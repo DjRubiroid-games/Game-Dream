@@ -60,6 +60,7 @@ let lastSyncTime = 0;
 
 // --- MOBILE DETECTION ---
 const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+window.onerror = (m, u, l) => alert(`JS Error: ${m} at line ${l}`);
 
 // --- TOUCH STATE ---
 const touchMove = { active: false, id: null, startX: 0, startY: 0, dx: 0, dy: 0 };
@@ -235,6 +236,10 @@ class GameScene extends Phaser.Scene {
         for (let i = 0; i < 32; i += 8) { g.moveTo(i, 0); g.lineTo(i, 32); g.moveTo(0, i); g.lineTo(32, i); }
         g.strokePath();
         g.generateTexture('tex_stone', 32, 32); g.clear();
+        // Bush
+        g.fillStyle(0x2d5a27, 1); g.fillCircle(20, 20, 18);
+        g.lineStyle(2, 0x1a3312, 1); g.strokeCircle(20, 20, 18);
+        g.generateTexture('bush', 40, 40); g.clear();
 
         g.destroy();
 
@@ -246,11 +251,6 @@ class GameScene extends Phaser.Scene {
         this.load.svg('loot_medkit', 'assets/medkit.svg', { width: 32, height: 32 });
         this.load.svg('loot_armor', 'assets/armor.svg', { width: 32, height: 32 });
         this.load.svg('loot_ammo', 'assets/ammo.svg', { width: 32, height: 32 });
-
-        // Bush SVG (dark green bubbling)
-        const bushSvg = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="#2d5a27" stroke="#1a3312" stroke-width="5"/></svg>';
-        const bushUrl = 'data:image/svg+xml;base64,' + btoa(bushSvg);
-        this.load.image('bush', bushUrl);
     }
 
     create() {
@@ -495,29 +495,29 @@ class GameScene extends Phaser.Scene {
             const w = 200, h = 200;
 
             // 1. Floor (wooden)
-            const floor = this.add.tileSprite(x + w / 2, y + h / 2, w, h, 'tex_floor').setDepth(2);
+            this.add.tileSprite(x + w / 2, y + h / 2, w, h, 'tex_floor').setDepth(2);
 
-            // 2. Entrances (Stone Mats) - Top and Bottom
-            const mat1 = this.add.sprite(x + w / 2, y, 'tex_stone').setDepth(1).setScale(1.5, 0.8);
-            const mat2 = this.add.sprite(x + w / 2, y + h, 'tex_stone').setDepth(1).setScale(1.5, 0.8);
+            // 2. Entrances (Stone Mats)
+            this.add.sprite(x + w / 2, y, 'tex_stone').setDepth(1).setScale(1.5, 0.8);
+            this.add.sprite(x + w / 2, y + h, 'tex_stone').setDepth(1).setScale(1.5, 0.8);
 
             // 3. Walls (segments with doors)
             const wt = 10;
-            const doorW = 50;
-            const doorOff = (w - doorW) / 2;
+            const dW = 50;
+            const dOff = (w - dW) / 2;
             const wallColor = 0x5d4037;
             const segments = [
-                { rx: x, ry: y, rw: doorOff, rh: wt }, // Top left
-                { rx: x + doorOff + doorW, ry: y, rw: w - doorOff - doorW, rh: wt }, // Top right
-                { rx: x, ry: y + h - wt, rw: doorOff, rh: wt }, // Bottom left
-                { rx: x + doorOff + doorW, ry: y + h - wt, rw: w - doorOff - doorW, rh: wt }, // Bottom right
-                { rx: x, ry: y, rw: wt, rh: h }, // Left
-                { rx: x + w - wt, ry: y, rw: wt, rh: h }, // Right
+                { rx: x, ry: y, rw: dOff, rh: wt },
+                { rx: x + dOff + dW, ry: y, rw: w - dOff - dW, rh: wt },
+                { rx: x, ry: y + h - wt, rw: dOff, rh: wt },
+                { rx: x + dOff + dW, ry: y + h - wt, rw: w - dOff - dW, rh: wt },
+                { rx: x, ry: y, rw: wt, rh: h },
+                { rx: x + w - wt, ry: y, rw: wt, rh: h },
             ];
             segments.forEach(seg => {
-                const wg = this.add.graphics().setDepth(3);
-                wg.fillStyle(wallColor, 1); wg.fillRect(seg.rx, seg.ry, seg.rw, seg.rh);
-                wg.lineStyle(2, 0x000000, 1); wg.strokeRect(seg.rx, seg.ry, seg.rw, seg.rh);
+                const wg = this.add.graphics({ x: seg.rx, y: seg.ry }).setDepth(3);
+                wg.fillStyle(wallColor, 1); wg.fillRect(0, 0, seg.rw, seg.rh);
+                wg.lineStyle(2, 0x000000, 1); wg.strokeRect(0, 0, seg.rw, seg.rh);
                 const zone = this.add.zone(seg.rx + seg.rw / 2, seg.ry + seg.rh / 2, seg.rw, seg.rh);
                 this.physics.add.existing(zone, true); this.obstacles.add(zone);
             });
