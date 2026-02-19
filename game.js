@@ -70,7 +70,21 @@ const touchAim = { active: false, id: null, startX: 0, startY: 0, dx: 0, dy: 0, 
 // --- NETWORKING ---
 const urlParams = new URLSearchParams(window.location.search);
 const roomId = urlParams.get('room') || 'public';
-const playerName = urlParams.get('name') || 'Игрок_' + Math.floor(Math.random() * 999);
+
+// Get player name: Telegram WebApp → URL param → random
+function getTelegramName() {
+    try {
+        const tg = window.Telegram && window.Telegram.WebApp;
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const u = tg.initDataUnsafe.user;
+            let name = u.first_name || '';
+            if (u.last_name) name += ' ' + u.last_name.charAt(0) + '.';
+            return name.trim() || null;
+        }
+    } catch (e) { }
+    return null;
+}
+const playerName = getTelegramName() || urlParams.get('name') || 'Игрок_' + Math.floor(Math.random() * 999);
 const socket = io();
 const netPlayers = new Map();
 
