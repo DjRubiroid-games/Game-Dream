@@ -1,15 +1,14 @@
 {
-  "name": "game-dream-server",
-  "version": "2.0.0",
-  "description": "Game Dream - Battle Royale backend with real-time multiplayer",
+  "name": "game-dream-bot",
+  "version": "1.0.0",
+  "description": "Telegram registration and stats bot for Game Dream BR",
   "main": "server.js",
   "dependencies": {
     "telegraf": "^4.16.3",
     "express": "^4.19.2",
     "sqlite3": "^5.1.7",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "socket.io": "^4.7.5"
+    "dotenv": "^16.4.5"
   },
   "scripts": {
     "start": "node server.js"

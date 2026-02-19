@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="metal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#555;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#333;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="wood" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B4513;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A0522D;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Stock -->
+  <path d="M2 38 L12 28 L14 38 Z" fill="url(#wood)" stroke="#3e1e09" stroke-width="2"/>
+  <!-- Body -->
+  <rect x="12" y="26" width="20" height="8" fill="#333" stroke="#000" stroke-width="2"/>
+  <!-- Barrel -->
+  <rect x="32" y="27" width="26" height="4" fill="url(#metal)" />
+  <rect x="34" y="22" width="20" height="3" fill="url(#wood)" stroke="#3e1e09" stroke-width="1"/> <!-- Handguard top -->
+  <rect x="34" y="32" width="20" height="3" fill="url(#wood)" stroke="#3e1e09" stroke-width="1"/> <!-- Handguard bottom -->
+  <!-- Magazine -->
+  <path d="M22 34 Q26 44 32 46 L28 48 Q20 46 18 34 Z" fill="#222" stroke="#000" stroke-width="2"/>
+  <!-- Sight -->
+  <path d="M54 27 L54 24 L56 24 L56 27 Z" fill="#111"/>
+</svg>

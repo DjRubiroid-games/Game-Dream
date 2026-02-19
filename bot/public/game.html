@@ -302,16 +302,8 @@
 
     <!-- Phaser 3 -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-    <!-- Mock Socket.IO for GitHub Pages Demo -->
-    <script>
-        const io = () => ({
-            emit: (ev, data) => console.log('Mock emit:', ev, data),
-            on: (ev, cb) => {
-                if (ev === 'currentPlayers') setTimeout(() => cb([]), 100);
-                if (ev === 'playerCount') setTimeout(() => cb(1), 100);
-            }
-        });
-    </script>
+    <!-- Socket.IO client -->
+    <script src="/socket.io/socket.io.js"></script>
     <!-- Game -->
     <script src="game.js"></script>
 </body>
