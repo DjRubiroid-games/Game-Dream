@@ -78,12 +78,15 @@ bot.command('join', (ctx) => {
 
     if (lobby.players.length === 8) {
         const gameLink = `${GAME_URL}/game.html?room=${chatId}`;
-        msg += `\n\n🎯 ОТРЯД СОБРАН! Все в бой:\n${gameLink}`;
+        msg += `\n\n🎯 ОТРЯД СОБРАН! Нажми кнопку ниже!`;
         lobby.active = false;
+        ctx.reply(msg, {
+            reply_markup: { inline_keyboard: [[{ text: '🎮 В БОЙ!', web_app: { url: gameLink } }]] }
+        });
     } else {
         msg += `\n\n💡 Готовы начать? Пишите /go`;
+        ctx.reply(msg);
     }
-    ctx.reply(msg);
 });
 
 bot.command('go', (ctx) => {
@@ -100,8 +103,8 @@ bot.command('go', (ctx) => {
     lobby.active = false;
     ctx.reply(
         `🎯 НАЧИНАЕМ С ${lobby.players.length} ИГРОКАМИ!\n\n` +
-        `👥 Состав:\n${playerList}\n\n` +
-        `🔗 Ссылка на игру:\n${gameLink}`
+        `👥 Состав:\n${playerList}`,
+        { reply_markup: { inline_keyboard: [[{ text: '🎮 В БОЙ!', web_app: { url: gameLink } }]] } }
     );
 });
 
