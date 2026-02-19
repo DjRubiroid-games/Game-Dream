@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <filter id="shadow">
+      <feDropShadow dx="2" dy="2" stdDeviation="1" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- Box -->
+  <rect x="10" y="14" width="44" height="36" rx="4" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="3" filter="url(#shadow)"/>
+  <path d="M10 24 L54 24" stroke="#bdc3c7" stroke-width="2" opacity="0.5"/>
+  <!-- Handle -->
+  <path d="M26 14 L26 10 Q26 6 32 6 Q38 6 38 10 L38 14" fill="none" stroke="#95a5a6" stroke-width="3"/>
+  <!-- Cross -->
+  <rect x="28" y="24" width="8" height="20" fill="#e74c3c"/>
+  <rect x="22" y="30" width="20" height="8" fill="#e74c3c"/>
+</svg>

@@ -86,102 +86,16 @@ class GameScene extends Phaser.Scene {
         g.fillCircle(4, 4, 4);
         g.generateTexture('bullet', 8, 8);
         g.clear();
-
-        // --- LOOT ICONS (24x24) ---
-        const S = 24;
-
-        // Pistol icon
-        g.fillStyle(0x2c2c2c, 1);
-        g.fillRect(4, 8, 16, 5);   // barrel
-        g.fillRect(8, 13, 6, 8);   // grip
-        g.fillStyle(0x8b4513, 1);
-        g.fillRect(9, 14, 4, 6);   // wood grip
-        g.fillStyle(0xf39c12, 1);
-        g.fillCircle(4, 10, 2);    // muzzle flash hint
-        g.lineStyle(1, 0xffffff, 0.4);
-        g.strokeRoundedRect(0, 0, S, S, 3);
-        g.generateTexture('loot_pistol', S, S);
-        g.clear();
-
-        // Shotgun icon
-        g.fillStyle(0x3d3d3d, 1);
-        g.fillRect(2, 10, 20, 4);  // double barrel
-        g.fillRect(2, 9, 20, 1);
-        g.fillStyle(0x8b4513, 1);
-        g.fillRect(14, 12, 8, 6);  // stock
-        g.fillStyle(0xe67e22, 1);
-        g.fillCircle(3, 12, 2);    // muzzle
-        g.lineStyle(1, 0xffffff, 0.4);
-        g.strokeRoundedRect(0, 0, S, S, 3);
-        g.generateTexture('loot_shotgun', S, S);
-        g.clear();
-
-        // Rifle icon
-        g.fillStyle(0x2c2c2c, 1);
-        g.fillRect(1, 10, 22, 3);  // long barrel
-        g.fillRect(12, 7, 6, 3);   // scope mount
-        g.fillStyle(0x2ecc71, 1);
-        g.fillCircle(15, 8, 2);    // scope lens
-        g.fillStyle(0x5a3d1a, 1);
-        g.fillRect(14, 13, 8, 5);  // stock
-        g.fillRect(7, 13, 4, 4);   // magazine
-        g.lineStyle(1, 0xffffff, 0.4);
-        g.strokeRoundedRect(0, 0, S, S, 3);
-        g.generateTexture('loot_rifle', S, S);
-        g.clear();
-
-        // Sniper icon
-        g.fillStyle(0x1a1a1a, 1);
-        g.fillRect(0, 11, 24, 2);  // very long barrel
-        g.fillStyle(0x444444, 1);
-        g.fillRect(10, 6, 8, 5);   // big scope
-        g.fillStyle(0x9b59b6, 1);
-        g.fillCircle(14, 8, 3);    // scope lens purple
-        g.fillStyle(0x5a3d1a, 1);
-        g.fillRect(16, 13, 7, 5);  // stock
-        g.lineStyle(1, 0xffffff, 0.4);
-        g.strokeRoundedRect(0, 0, S, S, 3);
-        g.generateTexture('loot_sniper', S, S);
-        g.clear();
-
-        // Medkit icon (red cross)
-        g.fillStyle(0xffffff, 1);
-        g.fillRoundedRect(0, 0, S, S, 4);
-        g.fillStyle(0xe74c3c, 1);
-        g.fillRect(10, 4, 4, 16);  // vertical bar
-        g.fillRect(4, 10, 16, 4);  // horizontal bar
-        g.lineStyle(1, 0xcc0000, 0.5);
-        g.strokeRoundedRect(0, 0, S, S, 4);
-        g.generateTexture('loot_medkit', S, S);
-        g.clear();
-
-        // Armor icon (shield)
-        g.fillStyle(0x3498db, 1);
-        g.fillTriangle(12, 2, 2, 8, 22, 8);   // top
-        g.fillRect(2, 8, 20, 8);               // middle
-        g.fillTriangle(12, 22, 2, 16, 22, 16); // bottom point
-        g.fillStyle(0xffffff, 0.3);
-        g.fillTriangle(12, 5, 6, 9, 18, 9);    // sheen
-        g.lineStyle(1, 0xffffff, 0.5);
-        g.strokeRoundedRect(0, 0, S, S, 3);
-        g.generateTexture('loot_armor', S, S);
-        g.clear();
-
-        // Ammo icon (bullets)
-        g.fillStyle(0xf1c40f, 1);
-        g.fillRect(5, 6, 4, 12);   // casing 1
-        g.fillRect(10, 6, 4, 12);  // casing 2
-        g.fillRect(15, 6, 4, 12);  // casing 3
-        g.fillStyle(0xcd7f32, 1);
-        g.fillRect(5, 4, 4, 3);    // tip 1
-        g.fillRect(10, 4, 4, 3);   // tip 2
-        g.fillRect(15, 4, 4, 3);   // tip 3
-        g.lineStyle(1, 0xffffff, 0.4);
-        g.strokeRoundedRect(0, 0, S, S, 3);
-        g.generateTexture('loot_ammo', S, S);
-        g.clear();
-
         g.destroy();
+
+        // Load SVG icons
+        this.load.svg('loot_pistol', 'assets/pistol.svg', { width: 32, height: 32 });
+        this.load.svg('loot_shotgun', 'assets/shotgun.svg', { width: 40, height: 32 });
+        this.load.svg('loot_rifle', 'assets/rifle.svg', { width: 44, height: 32 });
+        this.load.svg('loot_sniper', 'assets/sniper.svg', { width: 48, height: 32 });
+        this.load.svg('loot_medkit', 'assets/medkit.svg', { width: 32, height: 32 });
+        this.load.svg('loot_armor', 'assets/armor.svg', { width: 32, height: 32 });
+        this.load.svg('loot_ammo', 'assets/ammo.svg', { width: 32, height: 32 });
     }
 
     create() {
@@ -204,7 +118,7 @@ class GameScene extends Phaser.Scene {
         stormRadius = W * 0.7;
 
         // Loot
-        this.lootItems = this.physics.add.staticGroup();
+        this.lootItems = this.physics.add.group();
         this.spawnLoot();
 
         // Bullets
@@ -388,7 +302,9 @@ class GameScene extends Phaser.Scene {
             };
             const texKey = texMap[type] || 'loot_ammo';
 
-            const item = this.lootItems.create(x, y, texKey);
+            // Create sprite directly
+            const item = this.physics.add.sprite(x, y, texKey);
+            this.lootItems.add(item); // Add to group for collision
             item.setDepth(3);
             item.setData('lootType', type);
             item.refreshBody();

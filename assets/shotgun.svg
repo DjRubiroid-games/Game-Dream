@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="barrel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#444;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#222;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="wood" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B4513;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A0522D;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Stock -->
+  <path d="M4 24 L16 24 L16 36 L4 40 Q2 32 4 24 Z" fill="url(#wood)" stroke="#3e1e09" stroke-width="2"/>
+  <!-- Body -->
+  <rect x="16" y="26" width="16" height="8" fill="#333" stroke="#111" stroke-width="2"/>
+  <!-- Barrels -->
+  <rect x="32" y="26" width="28" height="3" fill="url(#barrel)" stroke="#111" stroke-width="1"/>
+  <rect x="32" y="30" width="28" height="3" fill="url(#barrel)" stroke="#111" stroke-width="1"/>
+  <!-- Pump/Handguard -->
+  <rect x="36" y="34" width="14" height="4" rx="2" fill="url(#wood)" stroke="#3e1e09" stroke-width="1"/>
+</svg>

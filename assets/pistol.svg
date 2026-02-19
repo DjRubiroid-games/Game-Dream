@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="metal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#555;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#333;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grip" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8B4513;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A0522D;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Barrel / Slide -->
+  <rect x="12" y="16" width="36" height="10" rx="2" fill="url(#metal)" stroke="#222" stroke-width="2"/>
+  <rect x="12" y="26" width="26" height="4" fill="#222" />
+  <!-- Grip -->
+  <path d="M14 26 L14 44 Q14 48 18 48 L26 48 Q30 48 30 44 L30 26 Z" fill="url(#grip)" stroke="#3e1e09" stroke-width="2"/>
+  <!-- Trigger Guard -->
+  <path d="M30 30 Q36 30 36 36 L36 30 Z" fill="none" stroke="#222" stroke-width="2"/>
+  <!-- Sights -->
+  <rect x="46" y="14" width="2" height="2" fill="#222"/>
+  <rect x="12" y="14" width="2" height="2" fill="#222"/>
+</svg>
