@@ -14,6 +14,12 @@ const CFG = {
     STORM_SHRINK_RATE: 0.15,
     STORM_DAMAGE: 1,
     STORM_TICK: 500,
+    // Storm phases: [delay before shrink (ms), target radius as fraction of MAP, shrink speed, damage multiplier]
+    STORM_PHASES: [
+        { delay: 60000, targetFraction: 0.45, speed: 0.08, damageMult: 1 },   // Phase 1: 60s wait, shrink to 45%
+        { delay: 30000, targetFraction: 0.25, speed: 0.12, damageMult: 2 },   // Phase 2: 30s wait, shrink to 25%
+        { delay: 45000, targetFraction: 0.13, speed: 0.10, damageMult: 3 },   // Phase 3: 45s wait, shrink to 13% (~30% wider than old min)
+    ],
     LOOT_COUNT: 80,
     TREE_COUNT: 150,
     ROCK_COUNT: 60,
@@ -47,10 +53,18 @@ let lastFired = 0;
 let isGameOver = false;
 let stormRadius;
 let stormCenterX, stormCenterY;
-let stormActive = false;
-let stormTimer = CFG.STORM_START_DELAY;
+let stormPhase = 0;           // 0 = waiting for phase 1, 1-3 = active phases
+let stormState = 'waiting';   // 'waiting' | 'shrinking' | 'done'
+let stormTimer = 0;
+let stormTargetRadius = 0;
+let stormCurrentDamageMult = 1;
 let networkPlayers = new Map();
 let playroomReady = false;
+
+// --- BACKEND ---
+const urlParams = new URLSearchParams(window.location.search);
+const chatId = urlParams.get('chatId');
+const BACKEND_URL = 'https://api.znak.pics';
 
 // ============================================================
 // PHASER SCENE
@@ -116,6 +130,9 @@ class GameScene extends Phaser.Scene {
         stormCenterX = W / 2;
         stormCenterY = H / 2;
         stormRadius = W * 0.7;
+        stormPhase = 0;
+        stormState = 'waiting';
+        stormTimer = CFG.STORM_PHASES[0].delay;
 
         // Loot
         this.lootItems = this.physics.add.group();
@@ -436,49 +453,72 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    // ---- STORM ----
+    // ---- STORM (3-phase) ----
     updateStorm(delta) {
-        if (stormActive) {
-            stormRadius = Math.max(50, stormRadius - CFG.STORM_SHRINK_RATE * delta);
-        } else {
+        const phases = CFG.STORM_PHASES;
+        const infoEl = document.getElementById('storm-info');
+
+        if (stormPhase >= phases.length) {
+            // All phases done — storm stays at final size
+            infoEl.textContent = '💀 Финальная зона!';
+            this.drawStorm();
+            return;
+        }
+
+        const phase = phases[stormPhase];
+
+        if (stormState === 'waiting') {
+            // Countdown before this phase starts shrinking
             stormTimer -= delta;
-            if (stormTimer <= 0) stormActive = true;
             const secs = Math.max(0, Math.ceil(stormTimer / 1000));
-            document.getElementById('storm-info').textContent = '☁️ Шторм через ' + secs + 'с';
+            const phaseNum = stormPhase + 1;
+            infoEl.textContent = '☁️ Шторм ' + phaseNum + '/3 через ' + secs + 'с';
+
+            if (stormTimer <= 0) {
+                // Start shrinking
+                stormState = 'shrinking';
+                stormTargetRadius = CFG.MAP * phase.targetFraction;
+                stormCurrentDamageMult = phase.damageMult;
+            }
+        } else if (stormState === 'shrinking') {
+            const phaseNum = stormPhase + 1;
+            infoEl.textContent = '⚡ Шторм ' + phaseNum + '/3 сжимается!';
+
+            stormRadius = Math.max(stormTargetRadius, stormRadius - phase.speed * delta);
+
+            if (stormRadius <= stormTargetRadius + 1) {
+                // Phase complete — move to next
+                stormRadius = stormTargetRadius;
+                stormPhase++;
+                stormState = 'waiting';
+                if (stormPhase < phases.length) {
+                    stormTimer = phases[stormPhase].delay;
+                }
+            }
         }
 
-        if (stormActive) {
-            document.getElementById('storm-info').textContent = '⚡ Шторм сжимается!';
-        }
+        this.drawStorm();
+    }
 
-        // Draw storm overlay using a mask approach:
-        // Draw a full-map purple overlay, then use a separate circle shape 
-        // We'll use the simple approach: redraw every frame
+    drawStorm() {
         this.stormGraphics.clear();
-
-        // Purple overlay over the entire map
+        // Purple overlay
         this.stormGraphics.fillStyle(0x4a0080, 0.4);
-        // We draw 4 rects around the safe circle to simulate the storm zone
-        // This is a simpler, more reliable method than blend modes
-        // Top rect
         this.stormGraphics.fillRect(0, 0, CFG.MAP, Math.max(0, stormCenterY - stormRadius));
-        // Bottom rect
         this.stormGraphics.fillRect(0, stormCenterY + stormRadius, CFG.MAP, CFG.MAP - (stormCenterY + stormRadius));
-        // Left rect (between top and bottom)
         this.stormGraphics.fillRect(0, Math.max(0, stormCenterY - stormRadius), Math.max(0, stormCenterX - stormRadius), stormRadius * 2);
-        // Right rect
         this.stormGraphics.fillRect(stormCenterX + stormRadius, Math.max(0, stormCenterY - stormRadius), CFG.MAP - (stormCenterX + stormRadius), stormRadius * 2);
-
-        // Storm border circle
+        // Border
         this.stormGraphics.lineStyle(4, 0x9b59b6, 0.9);
         this.stormGraphics.strokeCircle(stormCenterX, stormCenterY, stormRadius);
     }
 
     applyStormDamage() {
-        if (!stormActive || isGameOver) return;
+        if (stormPhase === 0 && stormState === 'waiting') return; // no damage before first shrink
+        if (isGameOver) return;
         const dist = Phaser.Math.Distance.Between(this.myPlayer.x, this.myPlayer.y, stormCenterX, stormCenterY);
         if (dist > stormRadius) {
-            this.takeDamage(CFG.STORM_DAMAGE * 5);
+            this.takeDamage(CFG.STORM_DAMAGE * 5 * stormCurrentDamageMult);
             this.showFloatingText(this.myPlayer.x, this.myPlayer.y - 20, '⚡ Шторм!', '#9b59b6');
         }
     }
@@ -638,13 +678,17 @@ class GameScene extends Phaser.Scene {
         this.checkWin();
     }
 
-    checkWin() {
+    async checkWin() {
         if (isGameOver) return;
+
         const alive = [...networkPlayers.values()].filter(p => {
             try { return (p.state.getState('hp') || 100) > 0; } catch (e) { return false; }
         });
+
         if (alive.length === 0 && networkPlayers.size > 0) {
             isGameOver = true;
+
+            // UI
             this.add.text(
                 this.cameras.main.scrollX + this.cameras.main.width / 2,
                 this.cameras.main.scrollY + this.cameras.main.height / 2,
@@ -653,6 +697,27 @@ class GameScene extends Phaser.Scene {
                 stroke: '#000', strokeThickness: 8
             }
             ).setOrigin(0.5).setDepth(200);
+
+            // Report to Backend
+            this.reportVictory();
+        }
+    }
+
+    async reportVictory() {
+        if (!chatId || !playroomReady) return;
+        try {
+            const me = Playroom.myPlayer();
+            await fetch(`${BACKEND_URL}/api/report-win`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chatId: chatId,
+                    winnerName: me.getProfile().name,
+                    winnerId: me.id
+                })
+            });
+        } catch (e) {
+            console.error("Failed to report victory:", e);
         }
     }
 }
