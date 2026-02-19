@@ -247,6 +247,16 @@ class GameScene extends Phaser.Scene {
         g.lineStyle(2, 0x1a3312, 1); g.strokeCircle(20, 20, 18);
         g.generateTexture('bush', 40, 40); g.clear();
 
+        // Crosshair
+        g.lineStyle(2, 0xffffff, 1);
+        g.strokeCircle(16, 16, 10);
+        g.moveTo(16, 2); g.lineTo(16, 10);
+        g.moveTo(16, 22); g.lineTo(16, 30);
+        g.moveTo(2, 16); g.lineTo(10, 16);
+        g.moveTo(22, 16); g.lineTo(30, 16);
+        g.strokePath();
+        g.generateTexture('crosshair', 32, 32); g.clear();
+
         g.destroy();
 
         // SVG loot icons
@@ -292,6 +302,12 @@ class GameScene extends Phaser.Scene {
         this.myPlayer.setDepth(10).setCircle(14).setCollideWorldBounds(true);
 
         this.myGun = this.add.sprite(spawnX, spawnY, 'gun_pistol').setOrigin(0, 0.5).setDepth(11);
+
+        this.crosshair = this.add.sprite(spawnX, spawnY, 'crosshair').setDepth(100).setScrollFactor(1);
+        if (!isMobile) {
+            this.input.setDefaultCursor('none');
+            this.game.canvas.style.cursor = 'none';
+        }
 
         this.myNameLabel = this.add.text(spawnX, spawnY - 25, playerName, {
             fontSize: '11px', color: '#ffffff',
@@ -828,6 +844,23 @@ class GameScene extends Phaser.Scene {
             this.myNameLabel.setAlpha(1);
             this.myGun.setScale(1.0, 1.0);
             this.myGun.setPosition(this.myPlayer.x, this.myPlayer.y);
+        }
+
+        // --- Crosshair position ---
+        if (isMobile) {
+            if (touchAim.active) {
+                this.crosshair.setVisible(true);
+                const dist = 150;
+                this.crosshair.x = this.myPlayer.x + Math.cos(this.myPlayer.rotation) * dist;
+                this.crosshair.y = this.myPlayer.y + Math.sin(this.myPlayer.rotation) * dist;
+            } else {
+                this.crosshair.setVisible(false);
+            }
+        } else {
+            const ptr = this.input.activePointer;
+            const worldPtr = this.cameras.main.getWorldPoint(ptr.x, ptr.y);
+            this.crosshair.setPosition(worldPtr.x, worldPtr.y);
+            this.crosshair.setVisible(true);
         }
     }
 
