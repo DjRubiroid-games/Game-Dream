@@ -57,6 +57,7 @@ let stormRadius, stormCenterX, stormCenterY;
 let stormPhase = 0, stormState = 'waiting', stormTimer = 0;
 let stormTargetRadius = 0, stormCurrentDamageMult = 1;
 let lastSyncTime = 0;
+let isReloading = false;
 
 // --- MOBILE DETECTION ---
 const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -302,33 +303,18 @@ class GameScene extends Phaser.Scene {
         this.cameras.main.startFollow(this.myPlayer, true, 0.1, 0.1);
         this.cameras.main.setZoom(isMobile ? 1.0 : 1.2);
 
-        // Input (desktop)
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.wasd = this.input.keyboard.addKeys({
-            up: Phaser.Input.Keyboard.KeyCodes.W,
-            down: Phaser.Input.Keyboard.KeyCodes.S,
-            left: Phaser.Input.Keyboard.KeyCodes.A,
-            right: Phaser.Input.Keyboard.KeyCodes.D,
-            reload: Phaser.Input.Keyboard.KeyCodes.R,
+        // Input
+        this.keys = this.input.keyboard.addKeys('W,A,S,D,R');
+        this.input.on('pointerdown', (ptr) => {
+            if (!isMobile) this.shoot(ptr);
         });
 
-        if (!isMobile) {
-            this.input.on('pointerdown', (ptr) => {
-                if (ptr.leftButtonDown()) this.shoot(ptr);
-            });
-            this.input.mouse.disableContextMenu();
+        // Mobile reload button listener
+        if (isMobile) {
+            const btn = document.getElementById('btn-reload');
+            if (btn) btn.onclick = () => this.reloadWeapon();
         }
         window.addEventListener('blur', () => { this.myPlayer.body.setVelocity(0, 0); });
-
-        // Mobile reload button
-        if (isMobile) {
-            document.getElementById('btn-reload').addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                myWeapon.currentAmmo = myWeapon.ammo;
-                this.showFloatingText(this.myPlayer.x, this.myPlayer.y, '🔄 Перезарядка', '#ffffff');
-                this.updateHUD();
-            });
-        }
 
         // Collisions
         this.physics.add.collider(this.myPlayer, this.obstacles);
@@ -589,8 +575,9 @@ class GameScene extends Phaser.Scene {
         if (isGameOver) return;
         const now = this.time.now;
         if (now - lastFired < myWeapon.fireRate) return;
+        if (isReloading) return;
         if (myWeapon.currentAmmo <= 0) {
-            this.showFloatingText(this.myPlayer.x, this.myPlayer.y, 'Нет патронов!', '#e74c3c');
+            this.reloadWeapon();
             return;
         }
         lastFired = now;
@@ -726,6 +713,28 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    reloadWeapon() {
+        if (isGameOver || isReloading || myWeapon.currentAmmo >= WEAPONS[Object.keys(WEAPONS).find(k => WEAPONS[k].name === myWeapon.name)].ammo) return;
+        if (myWeapon.maxAmmo <= 0) {
+            this.showFloatingText(this.myPlayer.x, this.myPlayer.y, 'Нет патронов в запасе!', '#e74c3c');
+            return;
+        }
+
+        isReloading = true;
+        this.showFloatingText(this.myPlayer.x, this.myPlayer.y, 'Перезарядка...', '#f1c40f');
+
+        this.time.delayedCall(1500, () => {
+            if (isGameOver) return;
+            const wBase = Object.values(WEAPONS).find(w => w.name === myWeapon.name);
+            const needed = wBase.ammo - myWeapon.currentAmmo;
+            const toReload = Math.min(needed, myWeapon.maxAmmo);
+            myWeapon.currentAmmo += toReload;
+            myWeapon.maxAmmo -= toReload;
+            isReloading = false;
+            this.updateHUD();
+        });
+    }
+
     updateHUD() {
         document.getElementById('hp-bar').textContent = '❤️ ' + Math.round(myHp);
         document.getElementById('armor-bar').textContent = '🛡️ ' + Math.round(myArmor);
@@ -744,11 +753,9 @@ class GameScene extends Phaser.Scene {
     }
 
     // ==========================================================
-    // MAIN LOOP
+    // MOVEMENT & INPUT
     // ==========================================================
-    update(time, delta) {
-        if (isGameOver) return;
-
+    handleMovement() {
         const speed = CFG.PLAYER_SPEED;
         let vx = 0, vy = 0;
 
@@ -776,10 +783,10 @@ class GameScene extends Phaser.Scene {
             }
         } else {
             // === DESKTOP: WASD + mouse ===
-            if (this.cursors.left.isDown || this.wasd.left.isDown) vx = -speed;
-            if (this.cursors.right.isDown || this.wasd.right.isDown) vx = speed;
-            if (this.cursors.up.isDown || this.wasd.up.isDown) vy = -speed;
-            if (this.cursors.down.isDown || this.wasd.down.isDown) vy = speed;
+            if (this.keys.A.isDown) vx = -speed;
+            if (this.keys.D.isDown) vx = speed;
+            if (this.keys.W.isDown) vy = -speed;
+            if (this.keys.S.isDown) vy = speed;
 
             // Rotate toward mouse
             const ptr = this.input.activePointer;
@@ -822,6 +829,17 @@ class GameScene extends Phaser.Scene {
             this.myGun.setScale(1.0, 1.0);
             this.myGun.setPosition(this.myPlayer.x, this.myPlayer.y);
         }
+    }
+
+    // ==========================================================
+    // MAIN LOOP
+    // ==========================================================
+    update(time, delta) {
+        if (isGameOver) return;
+
+        this.handleMovement();
+        this.updateRoofs();
+        if (this.keys.R.isDown) this.reloadWeapon();
 
         // Net sync
         if (time - lastSyncTime > CFG.NET_SYNC_RATE) {
@@ -854,16 +872,6 @@ class GameScene extends Phaser.Scene {
 
         // Storm & roofs
         this.updateStorm(delta);
-        this.updateRoofs();
-
-        // Reload (desktop)
-        if (!isMobile && Phaser.Input.Keyboard.JustDown(this.wasd.reload)) {
-            myWeapon.currentAmmo = myWeapon.ammo;
-            this.showFloatingText(this.myPlayer.x, this.myPlayer.y, '🔄 Перезарядка', '#ffffff');
-            this.updateHUD();
-        }
-
-        // Win check
         this.checkWin();
     }
 
